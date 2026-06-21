@@ -1,0 +1,11 @@
+participantId,role,PE,EE,SI,FC,BI,SUS,task1_signup,task2_google,task3_editProfile,task4_createService,task5_explore,task6_book,task7_message,task8_earnings,avg_time_s,comments
+P01,client,6,6,5,6,6,78,1,1,1,1,1,1,1,1,240,"Smooth overall, image upload slightly slow"
+P02,seller,5,5,4,5,5,70,1,1,1,1,1,1,1,1,300,"Clarified labels needed in earnings"
+P03,client,6,5,6,6,6,82,1,1,1,1,1,1,1,1,220,"Liked the dashboard; booking flow felt okay"
+P04,client,4,4,3,4,4,60,1,0,1,0,1,0,1,1,420,"Google OAuth failed once; booking flow confusing"
+P05,seller,6,6,6,7,6,85,1,1,1,1,1,1,1,1,210,"Very usable; would recommend"
+P06,client,5,5,5,5,5,72,1,1,1,1,1,1,1,1,260,"Messages loaded with ~5s polling, good"
+P07,seller,7,6,6,7,7,90,1,1,1,1,1,1,1,1,180,"Strongly positive; onboarding easy"
+P08,client,5,4,4,5,5,68,1,1,1,0,1,1,1,1,350,"Create service unnecessary for client; some ambiguity"
+P09,seller,6,6,5,6,6,80,1,1,1,1,1,1,1,1,230,"Earnings clear after update"
+P10,client,5,5,5,5,5,75,1,1,1,1,1,1,1,1,270,"Minor UI polish needed"

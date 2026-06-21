@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UTAUT Question Responses — Pie Charts</title>
+  <style>
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: #eef2ff;
+      color: #0f172a;
+      margin: 0;
+      padding: 24px;
+    }
+    h1 {
+      margin-bottom: 8px;
+      font-size: 2rem;
+    }
+    p {
+      margin-top: 0;
+      color: #475569;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #c7d2fe;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.08);
+    }
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+    .chart {
+      display: grid;
+      place-items: center;
+      margin-bottom: 14px;
+    }
+    .legend {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: #334155;
+    }
+    .dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+    .footer {
+      margin-top: 24px;
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>UTAUT Response Distribution</h1>
+  <p>This report shows the response distribution for each UTAUT construct across all 10 participants.</p>
+
+  <div class="grid" id="chart-grid"></div>
+
+  <div class="footer">Data source: frontend/usability/utaut_results_simulated.csv</div>
+
+  <script>
+    const data = {
+      'Performance Expectancy (PE)': [6,5,6,4,6,5,7,5,6,5],
+      'Effort Expectancy (EE)': [6,5,5,4,6,5,6,4,6,5],
+      'Social Influence (SI)': [5,4,6,3,6,5,6,4,5,5],
+      'Facilitating Conditions (FC)': [6,5,6,4,7,5,7,5,6,5],
+      'Behavioral Intention (BI)': [6,5,6,4,6,5,7,5,6,5],
+      'SUS Score': [78,70,82,60,85,72,90,68,80,75],
+    };
+
+    const grid = document.getElementById('chart-grid');
+    const colors = ['#2563eb','#60a5fa','#93c5fd','#c7d2fe','#e0e7ff','#818cf8','#4338ca'];
+
+    function createPieChart(counts) {
+      const total = counts.reduce((acc, value) => acc + value, 0);
+      const circumference = 2 * Math.PI * 45;
+      const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('width','180');
+      svg.setAttribute('height','180');
+      svg.setAttribute('viewBox','0 0 120 120');
+
+      const bg = document.createElementNS(svg.namespaceURI,'circle');
+      bg.setAttribute('cx','60');
+      bg.setAttribute('cy','60');
+      bg.setAttribute('r','45');
+      bg.setAttribute('fill','#f8fafc');
+      svg.appendChild(bg);
+
+      let offset = 0;
+      counts.forEach((count, index) => {
+        if (count === 0) return;
+        const slice = document.createElementNS(svg.namespaceURI,'circle');
+        slice.setAttribute('cx','60');
+        slice.setAttribute('cy','60');
+        slice.setAttribute('r','45');
+        slice.setAttribute('fill','transparent');
+        slice.setAttribute('stroke',colors[index]);
+        slice.setAttribute('stroke-width','18');
+        const dash = circumference * (count / total);
+        slice.setAttribute('stroke-dasharray', `${dash} ${circumference - dash}`);
+        slice.setAttribute('stroke-dashoffset', `${-offset}`);
+        slice.setAttribute('transform','rotate(-90 60 60)');
+        slice.setAttribute('stroke-linecap','butt');
+        svg.appendChild(slice);
+        offset += dash;
+      });
+
+      const label = document.createElementNS(svg.namespaceURI,'text');
+      label.setAttribute('x','50%');
+      label.setAttribute('y','50%');
+      label.setAttribute('dominant-baseline','middle');
+      label.setAttribute('text-anchor','middle');
+      label.setAttribute('font-size','18');
+      label.setAttribute('font-weight','700');
+      label.setAttribute('fill','#0f172a');
+      label.textContent = `${total}`;
+      svg.appendChild(label);
+
+      return svg;
+    }
+
+    function bucketSUS(scores) {
+      const buckets = { '0-50':0, '51-60':0, '61-70':0, '71-80':0, '81-100':0 };
+      scores.forEach(score => {
+        if (score <= 50) buckets['0-50']++;
+        else if (score <= 60) buckets['51-60']++;
+        else if (score <= 70) buckets['61-70']++;
+        else if (score <= 80) buckets['71-80']++;
+        else buckets['81-100']++;
+      });
+      return buckets;
+    }
+
+    const agreementLabels = ['Strongly Disagree', 'Disagree', 'Somewhat Disagree', 'Neutral', 'Somewhat Agree', 'Agree', 'Strongly Agree'];
+
+    for (const [label, values] of Object.entries(data)) {
+      const counts = label === 'SUS Score'
+        ? Object.values(bucketSUS(values))
+        : agreementLabels.map((_, idx) => values.filter(v => v === idx + 1).length);
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      const title = document.createElement('h2');
+      title.textContent = label;
+      card.appendChild(title);
+
+      const chartWrapper = document.createElement('div');
+      chartWrapper.className = 'chart';
+      chartWrapper.appendChild(createPieChart(counts));
+      card.appendChild(chartWrapper);
+
+      const legend = document.createElement('div');
+      legend.className = 'legend';
+      if (label === 'SUS Score') {
+        const bucketLabels = ['0-50','51-60','61-70','71-80','81-100'];
+        bucketLabels.forEach((bucket, idx) => {
+          const item = document.createElement('div');
+          item.className = 'legend-item';
+          item.innerHTML = `<span class="dot" style="background:${colors[idx]}"></span>${bucket}: ${counts[idx]} participants`;
+          legend.appendChild(item);
+        });
+      } else {
+        agreementLabels.forEach((agreement, idx) => {
+          const item = document.createElement('div');
+          item.className = 'legend-item';
+          item.innerHTML = `<span class="dot" style="background:${colors[idx]}"></span>${agreement}: ${counts[idx]} participants`;
+          legend.appendChild(item);
+        });
+      }
+
+      card.appendChild(legend);
+      grid.appendChild(card);
+    }
+  </script>
+</body>
+</html>

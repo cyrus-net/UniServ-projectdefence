@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UTAUT Client Results — Pie Charts</title>
+  <style>
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: #f4f6fb;
+      margin: 0;
+      padding: 24px;
+      color: #0f172a;
+    }
+    h1 {
+      margin-bottom: 12px;
+      font-size: 2rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+    }
+    .chart {
+      display: grid;
+      place-items: center;
+      margin-bottom: 16px;
+    }
+    .label {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .metrics {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      background: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+    }
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+    .footer {
+      margin-top: 28px;
+      font-size: 0.95rem;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <h1>UTAUT Client Results — Task Success Pie Charts</h1>
+  <p>Each pie chart shows how many of the 8 test tasks each client completed successfully.</p>
+  <div class="grid" id="chart-grid"></div>
+  <div class="footer">Data source: frontend/usability/utaut_results_simulated.csv</div>
+
+  <script>
+    const clients = [
+      { id: 'P01', tasks: [1,1,1,1,1,1,1,1], avgTime: 240, SUS: 78, comments: 'Smooth overall, image upload slightly slow' },
+      { id: 'P03', tasks: [1,1,1,1,1,1,1,1], avgTime: 220, SUS: 82, comments: 'Liked the dashboard; booking flow felt okay' },
+      { id: 'P04', tasks: [1,0,1,0,1,0,1,1], avgTime: 420, SUS: 60, comments: 'Google OAuth failed once; booking flow confusing' },
+      { id: 'P06', tasks: [1,1,1,1,1,1,1,1], avgTime: 260, SUS: 72, comments: 'Messages loaded with ~5s polling, good' },
+      { id: 'P08', tasks: [1,1,1,0,1,1,1,1], avgTime: 350, SUS: 68, comments: 'Create service unnecessary for client; some ambiguity' },
+      { id: 'P10', tasks: [1,1,1,1,1,1,1,1], avgTime: 270, SUS: 75, comments: 'Minor UI polish needed' },
+    ];
+
+    const chartGrid = document.getElementById('chart-grid');
+
+    function createPieSvg(successCount) {
+      const failureCount = 8 - successCount;
+      const ratio = successCount / 8;
+      const circumference = 2 * Math.PI * 45;
+      const successLength = circumference * ratio;
+      const failureLength = circumference - successLength;
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '180');
+      svg.setAttribute('height', '180');
+      svg.setAttribute('viewBox', '0 0 120 120');
+
+      const bgCircle = document.createElementNS(svg.namespaceURI, 'circle');
+      bgCircle.setAttribute('cx', '60');
+      bgCircle.setAttribute('cy', '60');
+      bgCircle.setAttribute('r', '45');
+      bgCircle.setAttribute('fill', '#f8fafc');
+      svg.appendChild(bgCircle);
+
+      const successCircle = document.createElementNS(svg.namespaceURI, 'circle');
+      successCircle.setAttribute('cx', '60');
+      successCircle.setAttribute('cy', '60');
+      successCircle.setAttribute('r', '45');
+      successCircle.setAttribute('fill', 'transparent');
+      successCircle.setAttribute('stroke', '#2563eb');
+      successCircle.setAttribute('stroke-width', '18');
+      successCircle.setAttribute('stroke-dasharray', `${successLength} ${failureLength}`);
+      successCircle.setAttribute('stroke-linecap', 'round');
+      successCircle.setAttribute('transform', 'rotate(-90 60 60)');
+      svg.appendChild(successCircle);
+
+      const failureCircle = document.createElementNS(svg.namespaceURI, 'circle');
+      failureCircle.setAttribute('cx', '60');
+      failureCircle.setAttribute('cy', '60');
+      failureCircle.setAttribute('r', '45');
+      failureCircle.setAttribute('fill', 'transparent');
+      failureCircle.setAttribute('stroke', '#cbd5e1');
+      failureCircle.setAttribute('stroke-width', '18');
+      failureCircle.setAttribute('stroke-dasharray', `${failureLength} ${successLength}`);
+      failureCircle.setAttribute('stroke-linecap', 'round');
+      failureCircle.setAttribute('transform', 'rotate(-90 60 60)');
+      failureCircle.setAttribute('stroke-dashoffset', `-${successLength}`);
+      svg.appendChild(failureCircle);
+
+      const text = document.createElementNS(svg.namespaceURI, 'text');
+      text.setAttribute('x', '50%');
+      text.setAttribute('y', '50%');
+      text.setAttribute('dominant-baseline', 'middle');
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '20');
+      text.setAttribute('font-weight', '700');
+      text.setAttribute('fill', '#0f172a');
+      text.textContent = `${successCount}/8`;
+      svg.appendChild(text);
+
+      return svg;
+    }
+
+    clients.forEach((client) => {
+      const successTasks = client.tasks.filter(Boolean).length;
+      const failureTasks = 8 - successTasks;
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const title = document.createElement('div');
+      title.className = 'label';
+      title.textContent = `Participant ${client.id} — ${successTasks}/8 tasks succeeded`;
+      card.appendChild(title);
+
+      const chartWrapper = document.createElement('div');
+      chartWrapper.className = 'chart';
+      chartWrapper.appendChild(createPieSvg(successTasks));
+      card.appendChild(chartWrapper);
+
+      const metrics = document.createElement('div');
+      metrics.className = 'metrics';
+
+      const createMetric = (label, value) => {
+        const row = document.createElement('div');
+        row.className = 'metric';
+        row.innerHTML = `<span>${label}</span><strong>${value}</strong>`;
+        return row;
+      };
+
+      metrics.appendChild(createMetric('Success', `${(successTasks / 8 * 100).toFixed(0)}%`));
+      metrics.appendChild(createMetric('Failures', `${failureTasks}`));
+      metrics.appendChild(createMetric('Avg time', `${client.avgTime}s`));
+      metrics.appendChild(createMetric('SUS', `${client.SUS}`));
+      card.appendChild(metrics);
+
+      const legend = document.createElement('div');
+      legend.className = 'legend';
+      legend.innerHTML = `
+        <span><span class="legend-dot" style="background:#2563eb"></span> Completed</span>
+        <span><span class="legend-dot" style="background:#cbd5e1"></span> Failed</span>
+      `;
+      card.appendChild(legend);
+
+      const note = document.createElement('div');
+      note.style.marginTop = '14px';
+      note.style.fontSize = '0.95rem';
+      note.style.color = '#475569';
+      note.textContent = `Comment: ${client.comments}`;
+      card.appendChild(note);
+
+      chartGrid.appendChild(card);
+    });
+  </script>
+</body>
+</html>
