@@ -92,6 +92,18 @@ export const api = {
 
   },
 
+  updateTheme: async (theme: "light" | "dark") => {
+    const response = await fetch(`${API_URL}/auth/theme`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeader(),
+      },
+      body: JSON.stringify({ themePreference: theme }),
+    });
+    return response.json();
+  },
+
   // Service endpoints
   services: {
     getAll: async (page = 1, limit = 12) => {

@@ -19,6 +19,7 @@ interface User {
     };
   };
   createdAt?: string;
+  themePreference?: "light" | "dark";
 }
 
 interface AuthContextType {
@@ -46,6 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+        if (parsed.themePreference) {
+          localStorage.setItem("theme", parsed.themePreference);
+        }
       } catch (error) {
         console.error("Error parsing stored user:", error);
         localStorage.removeItem("token");
@@ -68,6 +74,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(authToken);
     localStorage.setItem("token", authToken);
     localStorage.setItem("user", JSON.stringify(userData));
+    if (userData.themePreference) {
+      localStorage.setItem("theme", userData.themePreference);
+    }
+  };
   };
 
   const updateUser = (userData: User) => {

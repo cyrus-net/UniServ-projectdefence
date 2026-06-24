@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { api } from "../services/api";
 
 interface ThemeContextType {
   isDark: boolean;
@@ -13,8 +14,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Check localStorage first
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
-    // Fall back to system preference
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // Default to light mode
+    return false;
   });
 
   useEffect(() => {
@@ -28,7 +29,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isDark]);
 
-  const toggleTheme = () => setIsDark((prev) => !prev);
+  const toggleTheme = async () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    const token = localStorage.getItem("token");
+    if (token) {
+      await api.auth.updateTheme(newTheme ? "dark" : "light");
+    }
+  };
   const setTheme = (isDark: boolean) => setIsDark(isDark);
 
   return (
