@@ -46,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedToken && storedUser) {
       try {
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
         const parsed = JSON.parse(storedUser);
         setUser(parsed);
         if (parsed.themePreference) {
@@ -77,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userData.themePreference) {
       localStorage.setItem("theme", userData.themePreference);
     }
-  };
   };
 
   const updateUser = (userData: User) => {
