@@ -130,12 +130,6 @@ export function ServiceDetails() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Success Toast */}
-      {successMsg && (
-        <div className="fixed top-6 right-6 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-fade-in">
-          {successMsg}
-        </div>
-      )}
 
       {/* Message Modal */}
       {showMsgModal && (
@@ -274,6 +268,7 @@ export function ServiceDetails() {
                   >
                     {hasBooked ? "Booked ✓" : isBooking ? "Booking..." : "Book Now"}
                   </button>
+
                   <button
                     onClick={handleSave}
                     disabled={isSaving}
@@ -282,6 +277,7 @@ export function ServiceDetails() {
                     <Heart className="w-5 h-5" />
                     {isSaving ? "Saving..." : "Save Service"}
                   </button>
+
                   {hasBooked && (
                     <button
                       onClick={() => { setShowMsgModal(true); setTimeout(() => msgRef.current?.focus(), 100); }}
@@ -290,6 +286,11 @@ export function ServiceDetails() {
                       <MessageCircle className="w-5 h-5" />
                       Message Seller
                     </button>
+                  )}
+
+                  {/* Success message below buttons */}
+                  {successMsg && (
+                    <p className="text-sm text-green-600 text-center mt-2">{successMsg}</p>
                   )}
                 </div>
               </div>

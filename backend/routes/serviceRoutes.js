@@ -11,7 +11,6 @@ const {
   getServiceById,
 } = require("../controllers/serviceController");
 
-router.get("/:id", getServiceById); // Get service by ID (public)
 
 // Get all services (public)
 router.get("/", getAllServices);
@@ -30,5 +29,8 @@ router.put("/:id", auth, roleCheck(["seller"]), updateService);
 
 // Delete service (seller only)
 router.delete("/:id", auth, roleCheck(["seller"]), deleteService);
+
+// Get single service by ID (public) — MUST be last
+router.get("/:id", getServiceById);
 
 module.exports = router;
