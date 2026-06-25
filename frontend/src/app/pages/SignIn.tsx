@@ -43,18 +43,12 @@ export function SignIn() {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(loginData),
+      const data = await api.auth.login({
+        email: loginData.email as string,
+        password: loginData.password as string,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Use AuthContext login function
+      if (data?.token) {
         login({
           _id: data._id,
           fullName: data.fullName,
@@ -65,14 +59,13 @@ export function SignIn() {
           createdAt: data.createdAt,
         }, data.token);
 
-        // Redirect based on role
         if (data.role === "client") {
           navigate("/client/dashboard");
         } else {
           navigate("/seller/dashboard");
         }
       } else {
-        setError(data.message || "Login failed");
+        setError(data?.message || "Login failed");
       }
     } catch (error) {
       setError("Network error. Please try again.");
