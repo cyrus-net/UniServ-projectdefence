@@ -28,7 +28,7 @@ const auth = (req, res, next) => {
 const roleCheck = (allowedRoles) => {
   return async (req, res, next) => {
     try {
-      const User = require("../models/user");
+      const User = require("../models/User");
       const user = await User.findById(req.userId);
 
       if (!user) {
