@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { Mail, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import useAutoDismiss from "../hooks/useAutoDismiss";
+import { api } from "../services/api";
 
 export function ForgotPassword() {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,20 +22,12 @@ export function ForgotPassword() {
     const email = formData.get("email");
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
+      const data = await api.auth.forgotPassword({ email: email as string });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data?.success || data?.message?.toLowerCase().includes("sent")) {
         setSuccess(true);
       } else {
-        setError(data.message || "Failed to send reset email");
+        setError(data?.message || "Failed to send reset email");
       }
     } catch (error) {
       setError("Network error. Please try again.");

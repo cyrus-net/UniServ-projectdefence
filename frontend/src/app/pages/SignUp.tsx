@@ -86,21 +86,12 @@ export function SignUp() {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
+      const data = await api.auth.register(userData);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Registration successful, redirect to sign in page
+      if (data?.token || data?._id) {
         navigate("/sign-in");
       } else {
-        showError(data.message || "Registration failed");
+        showError(data?.message || "Registration failed");
       }
     } catch (error) {
       showError("Network error. Please try again.");
