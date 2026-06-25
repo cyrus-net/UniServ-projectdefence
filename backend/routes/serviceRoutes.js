@@ -8,7 +8,10 @@ const {
   getSellerStats,
   updateService,
   deleteService,
+  getServiceById,
 } = require("../controllers/serviceController");
+
+router.get("/:id", getServiceById); // Get service by ID (public)
 
 // Get all services (public)
 router.get("/", getAllServices);

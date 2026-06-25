@@ -5,5 +5,6 @@ const { createReview, getReviews } = require("../controllers/reviewController");
 
 router.post("/", auth, createReview);
 router.get("/", auth, getReviews);
+router.get("/:serviceId", getReviews);
 
 module.exports = router;

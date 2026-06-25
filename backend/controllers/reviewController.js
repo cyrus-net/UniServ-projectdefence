@@ -56,7 +56,19 @@ async function getReviews(req, res) {
   }
 }
 
+async function getReviewsByService(req, res) {
+  try {
+    const reviews = await Review.find({ service: req.params.serviceId })
+      .populate("client", "fullName")
+      .sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
 module.exports = {
   createReview,
   getReviews,
+  getReviewsByService,
 };

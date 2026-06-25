@@ -200,7 +200,7 @@ export function ClientDashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-foreground/60">Starting at</span>
-                    <span className="text-xl font-bold">${service.price}</span>
+                    <span className="text-xl font-bold">₦{service.price}</span>
                   </div>
                 </div>
               </Link>

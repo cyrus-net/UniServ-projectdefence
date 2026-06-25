@@ -123,6 +123,11 @@ export const api = {
       return handleResponse(response);
     },
 
+    getById: async (id: string) => {
+      const response = await fetch(`${API_URL}/services/${id}`);
+      return response.json();
+    },
+
     create: async (data: {
       title: string;
       description: string;
@@ -279,6 +284,11 @@ export const api = {
       const response = await fetch(`${API_URL}/reviews`, {
         headers: { ...authHeader() },
       });
+      return response.json();
+    },
+
+    getByService: async (serviceId: string) => {
+      const response = await fetch(`${API_URL}/reviews/${serviceId}`);
       return response.json();
     },
   },
