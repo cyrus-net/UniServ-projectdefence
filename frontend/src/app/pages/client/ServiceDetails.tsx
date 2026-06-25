@@ -1,6 +1,6 @@
-import { useParams, Link } from "react-router";
-import { Star, Clock, CheckCircle, Heart } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useParams } from "react-router";
+import { Star, Clock, CheckCircle, Heart, MessageCircle, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -34,8 +34,20 @@ export function ServiceDetails() {
   const [isLoading, setIsLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [bookingMsg, setBookingMsg] = useState("");
-  const [saveMsg, setSaveMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [hasBooked, setHasBooked] = useState(false);
+
+  // Message modal state
+  const [showMsgModal, setShowMsgModal] = useState(false);
+  const [msgText, setMsgText] = useState("");
+  const [isSendingMsg, setIsSendingMsg] = useState(false);
+  const [msgSuccess, setMsgSuccess] = useState("");
+  const msgRef = useRef<HTMLTextAreaElement>(null);
+
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(""), 3000);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -57,12 +69,12 @@ export function ServiceDetails() {
 
   const handleBook = async () => {
     setIsBooking(true);
-    setBookingMsg("");
     try {
       await api.bookings.create({ serviceId: id! });
-      setBookingMsg("Booking successful! Check My Bookings.");
-    } catch (e) {
-      setBookingMsg("Failed to book. Try again.");
+      setHasBooked(true);
+      showSuccess("Booking successful! Check My Bookings.");
+    } catch {
+      showSuccess("Failed to book. Try again.");
     } finally {
       setIsBooking(false);
     }
@@ -70,14 +82,31 @@ export function ServiceDetails() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    setSaveMsg("");
     try {
       await api.savedServices.save(id!);
-      setSaveMsg("Service saved!");
-    } catch (e) {
-      setSaveMsg("Failed to save.");
+      showSuccess("Service saved! ❤️");
+    } catch {
+      showSuccess("Failed to save. Try again.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!msgText.trim() || !service) return;
+    setIsSendingMsg(true);
+    try {
+      await api.messages.send({ receiverId: service.seller._id, message: msgText });
+      setMsgSuccess("Message sent!");
+      setMsgText("");
+      setTimeout(() => {
+        setMsgSuccess("");
+        setShowMsgModal(false);
+      }, 2000);
+    } catch {
+      setMsgSuccess("Failed to send. Try again.");
+    } finally {
+      setIsSendingMsg(false);
     }
   };
 
@@ -101,13 +130,50 @@ export function ServiceDetails() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Success Toast */}
+      {successMsg && (
+        <div className="fixed top-6 right-6 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-fade-in">
+          {successMsg}
+        </div>
+      )}
+
+      {/* Message Modal */}
+      {showMsgModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-md border border-border shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Message {service.seller.fullName}</h3>
+              <button onClick={() => setShowMsgModal(false)} title="Close" className="p-2 hover:bg-accent rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <textarea
+              ref={msgRef}
+              value={msgText}
+              onChange={(e) => setMsgText(e.target.value)}
+              placeholder="Write your message..."
+              rows={4}
+              className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none mb-4"
+            />
+            {msgSuccess && <p className="text-sm text-green-600 mb-3">{msgSuccess}</p>}
+            <button
+              onClick={handleSendMessage}
+              disabled={isSendingMsg || !msgText.trim()}
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all disabled:opacity-50"
+            >
+              {isSendingMsg ? "Sending..." : "Send Message"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Service Image */}
+            {/* Image */}
             <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl overflow-hidden flex items-center justify-center">
-              {service.images && service.images.length > 0 ? (
+              {service.images && service.images.length > 0 && service.images[0] ? (
                 <img src={service.images[0]} alt={service.title} className="w-full h-full object-cover" />
               ) : (
                 <div className="text-8xl">🎨</div>
@@ -117,21 +183,19 @@ export function ServiceDetails() {
             {/* Title & Seller */}
             <div>
               <h1 className="text-3xl font-bold mb-3">{service.title}</h1>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center">
-                    <span className="text-lg font-semibold">{sellerInitials}</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold">{service.seller.fullName}</p>
-                    {avgRating && (
-                      <div className="flex items-center gap-1 text-sm">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">{avgRating}</span>
-                        <span className="text-foreground/60">({reviews.length} reviews)</span>
-                      </div>
-                    )}
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-lg font-semibold">{sellerInitials}</span>
+                </div>
+                <div>
+                  <p className="font-semibold">{service.seller.fullName}</p>
+                  {avgRating && (
+                    <div className="flex items-center gap-1 text-sm">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">{avgRating}</span>
+                      <span className="text-foreground/60">({reviews.length} reviews)</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -161,7 +225,7 @@ export function ServiceDetails() {
                 <div className="space-y-4">
                   {reviews.map((review) => (
                     <div key={review._id} className="pb-4 border-b border-border last:border-0">
-                      <div className="flex items-start gap-3 mb-2">
+                      <div className="flex items-start gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-sm font-semibold">
                             {review.client.fullName.split(" ").map(n => n[0]).join("").toUpperCase()}
@@ -202,16 +266,13 @@ export function ServiceDetails() {
                   </div>
                 </div>
 
-                {bookingMsg && <p className="text-sm text-green-600 mb-3">{bookingMsg}</p>}
-                {saveMsg && <p className="text-sm text-green-600 mb-3">{saveMsg}</p>}
-
                 <div className="space-y-3">
                   <button
                     onClick={handleBook}
-                    disabled={isBooking}
+                    disabled={isBooking || hasBooked}
                     className="w-full py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50"
                   >
-                    {isBooking ? "Booking..." : "Book Now"}
+                    {hasBooked ? "Booked ✓" : isBooking ? "Booking..." : "Book Now"}
                   </button>
                   <button
                     onClick={handleSave}
@@ -219,8 +280,17 @@ export function ServiceDetails() {
                     className="w-full py-3 bg-card border border-border rounded-xl hover:bg-accent transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <Heart className="w-5 h-5" />
-                    {isSaving ? "Saving..." : "Save"}
+                    {isSaving ? "Saving..." : "Save Service"}
                   </button>
+                  {hasBooked && (
+                    <button
+                      onClick={() => { setShowMsgModal(true); setTimeout(() => msgRef.current?.focus(), 100); }}
+                      className="w-full py-3 bg-card border border-border rounded-xl hover:bg-accent transition-all flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      Message Seller
+                    </button>
+                  )}
                 </div>
               </div>
 

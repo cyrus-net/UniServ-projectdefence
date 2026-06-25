@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Service = require("../models/Service");
 const Notification = require("../models/Notification");
+const Review = require("../models/Review");
 
 // Create a new service (seller only)
 async function createService(req, res) {
@@ -50,27 +51,36 @@ async function createService(req, res) {
 // Get all services with pagination
 async function getAllServices(req, res) {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(20, parseInt(req.query.limit) || 12);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
 
-    const [services, total] = await Promise.all([
-      Service.find()
-        .populate("seller", "fullName email")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      Service.countDocuments(),
-    ]);
+    const services = await Service.find({ status: "Active" })
+      .populate("seller", "fullName email")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    // Attach review stats to each service
+    const servicesWithStats = await Promise.all(
+      services.map(async (service) => {
+        const reviews = await Review.find({ service: service._id });
+        const avgRating = reviews.length
+          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+          : null;
+        return {
+          ...service.toObject(),
+          avgRating,
+          reviewCount: reviews.length,
+        };
+      })
+    );
+
+    const total = await Service.countDocuments({ status: "Active" });
 
     res.json({
-      services,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      services: servicesWithStats,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

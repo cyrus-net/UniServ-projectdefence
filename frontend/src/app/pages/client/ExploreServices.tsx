@@ -11,6 +11,9 @@ interface Service {
   price: number;
   availability: string;
   status?: string;
+  images?: string[];
+  avgRating?: number;
+  reviewCount?: number;
 }
 
 export function ExploreServices() {
@@ -186,22 +189,30 @@ export function ExploreServices() {
               to={`/client/service/${service._id}`}
               className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all group"
             >
-              <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <div className="text-5xl">🎨</div>
+              <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden">
+                {service.images && service.images.length > 0 && service.images[0] ? (
+                  <img src={service.images[0]} alt={service.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-5xl">🎨</div>
+                )}
               </div>
               <div className="p-5">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold group-hover:text-primary transition-colors flex-1 line-clamp-2">
-                    {service.title}
-                  </h3>
-                </div>
-                <p className="text-sm text-foreground/70 mb-3">{typeof service.seller === 'string' ? service.seller : service.seller?.fullName}</p>
+                <h3 className="font-semibold group-hover:text-primary transition-colors flex-1 line-clamp-2 mb-1">
+                  {service.title}
+                </h3>
+                <p className="text-sm text-foreground/70 mb-3">
+                  {typeof service.seller === "string" ? service.seller : service.seller?.fullName}
+                </p>
                 <div className="flex items-center gap-2 mb-4">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">4.8</span>
+                    <span className="text-sm font-medium">
+                      {service.avgRating ? Number(service.avgRating).toFixed(1) : "New"}
+                    </span>
                   </div>
-                  <span className="text-sm text-foreground/60">(45)</span>
+                  {service.reviewCount != null && service.reviewCount > 0 && (
+                    <span className="text-sm text-foreground/60">({service.reviewCount})</span>
+                  )}
                 </div>
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <span className="text-sm text-foreground/60">Starting at</span>
